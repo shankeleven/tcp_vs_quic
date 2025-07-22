@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP vs QUIC Interactive Protocol Comparison</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="py-16">
+            <h1 class="text-center">TCP vs QUIC Interactive Protocol Comparison</h1>
+            <p class="text-center text-secondary">Explore the differences through interactive animations and real-time controls</p>
+        </header>
+
+        <!-- Demo Selection -->
+        <nav class="demo-selector mb-8">
+            <button class="btn btn--primary demo-btn active" data-demo="handshake">Handshake Comparison</button>
+            <button class="btn btn--secondary demo-btn" data-demo="streaming">Head-of-Line Blocking</button>
+            <button class="btn btn--secondary demo-btn" data-demo="migration">Connection Migration</button>
+            <button class="btn btn--secondary demo-btn" data-demo="performance">Performance Dashboard</button>
+        </nav>
+
+        <!-- Global Controls -->
+        <div class="controls-panel card mb-8">
+            <div class="card__body">
+                <h3>Global Controls</h3>
+                <div class="controls-grid">
+                    <div class="control-group">
+                        <label class="form-label">Network Latency: <span id="latency-value">100ms</span></label>
+                        <input type="range" id="latency-slider" min="10" max="500" value="100" class="slider">
+                    </div>
+                    <div class="control-group">
+                        <label class="form-label">Animation Speed: <span id="speed-value">1x</span></label>
+                        <input type="range" id="speed-slider" min="0.25" max="4" step="0.25" value="1" class="slider">
+                    </div>
+                    <div class="control-group">
+                        <label class="form-label">Network Preset:</label>
+                        <select id="preset-selector" class="form-control">
+                            <option value="excellent">Excellent (10ms, 0% loss)</option>
+                            <option value="good">Good (50ms, 0.1% loss)</option>
+                            <option value="average" selected>Average (100ms, 1% loss)</option>
+                            <option value="poor">Poor (200ms, 3% loss)</option>
+                            <option value="terrible">Terrible (500ms, 10% loss)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <button class="btn btn--outline" id="reset-demo">Reset Demo</button>
+                        <button class="btn btn--outline" id="save-config">Save Config</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Containers -->
+        
+        <!-- Handshake Comparison Demo -->
+        <div class="demo-container" id="handshake-demo">
+            <div class="demo-header">
+                <h2>Handshake Comparison</h2>
+                <p>Click packets to send them manually, or use the timeline to control the animation</p>
+            </div>
+            
+            <div class="comparison-layout">
+                <!-- TCP Section -->
+                <div class="protocol-section">
+                    <h3>TCP + TLS</h3>
+                    <div class="network-diagram">
+                        <div class="endpoint client">
+                            <div class="endpoint-icon">Client</div>
+                            <div class="state-indicator" id="tcp-client-state">Idle</div>
+                        </div>
+                        
+                        <div class="connection-area">
+                            <div class="packet-lane" id="tcp-lane">
+                                <!-- Packets will be dynamically added here -->
+                            </div>
+                            <div class="rtt-display">RTT: <span id="tcp-rtt">0ms</span></div>
+                        </div>
+                        
+                        <div class="endpoint server">
+                            <div class="endpoint-icon">Server</div>
+                            <div class="state-indicator" id="tcp-server-state">Idle</div>
+                        </div>
+                    </div>
+                    
+                    <div class="handshake-steps">
+                        <div class="step" id="tcp-step-1">1. TCP SYN</div>
+                        <div class="step" id="tcp-step-2">2. TCP SYN-ACK</div>
+                        <div class="step" id="tcp-step-3">3. TCP ACK</div>
+                        <div class="step" id="tcp-step-4">4. TLS ClientHello</div>
+                        <div class="step" id="tcp-step-5">5. TLS ServerHello</div>
+                        <div class="step" id="tcp-step-6">6. TLS Finished</div>
+                    </div>
+                    
+                    <div class="protocol-controls">
+                        <button class="btn btn--sm btn--primary" id="tcp-start">Start TCP Handshake</button>
+                        <button class="btn btn--sm btn--secondary" id="tcp-step">Step Forward</button>
+                    </div>
+                </div>
+
+                <!-- QUIC Section -->
+                <div class="protocol-section">
+                    <h3>QUIC</h3>
+                    <div class="network-diagram">
+                        <div class="endpoint client">
+                            <div class="endpoint-icon">Client</div>
+                            <div class="state-indicator" id="quic-client-state">Idle</div>
+                        </div>
+                        
+                        <div class="connection-area">
+                            <div class="packet-lane" id="quic-lane">
+                                <!-- Packets will be dynamically added here -->
+                            </div>
+                            <div class="rtt-display">RTT: <span id="quic-rtt">0ms</span></div>
+                        </div>
+                        
+                        <div class="endpoint server">
+                            <div class="endpoint-icon">Server</div>
+                            <div class="state-indicator" id="quic-server-state">Idle</div>
+                        </div>
+                    </div>
+                    
+                    <div class="handshake-steps">
+                        <div class="step" id="quic-step-1">1. Initial + TLS ClientHello</div>
+                        <div class="step" id="quic-step-2">2. Handshake + TLS ServerHello</div>
+                        <div class="step" id="quic-step-3">3. 1-RTT Application Data</div>
+                    </div>
+                    
+                    <div class="protocol-controls">
+                        <button class="btn btn--sm btn--primary" id="quic-start">Start QUIC Handshake</button>
+                        <button class="btn btn--sm btn--secondary" id="quic-step">Step Forward</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Control -->
+            <div class="timeline-control">
+                <label class="form-label">Animation Timeline</label>
+                <input type="range" id="timeline-scrubber" min="0" max="100" value="0" class="timeline-slider">
+                <div class="timeline-buttons">
+                    <button class="btn btn--sm" id="timeline-play">▶ Play</button>
+                    <button class="btn btn--sm" id="timeline-pause">⏸ Pause</button>
+                    <button class="btn btn--sm" id="timeline-reset">⏹ Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Head-of-Line Blocking Demo -->
+        <div class="demo-container hidden" id="streaming-demo">
+            <div class="demo-header">
+                <h2>Head-of-Line Blocking Simulation</h2>
+                <p>Drag packets to reorder, click to drop them, and see how each protocol handles stream multiplexing</p>
+            </div>
+
+            <div class="streaming-controls">
+                <div class="control-group">
+                    <label class="form-label">Packet Loss Rate: <span id="loss-rate-value">1%</span></label>
+                    <input type="range" id="loss-rate-slider" min="0" max="10" step="0.1" value="1" class="slider">
+                </div>
+                <div class="control-group">
+                    <label class="form-label">Bandwidth: <span id="bandwidth-value">50 Mbps</span></label>
+                    <input type="range" id="bandwidth-slider" min="1" max="1000" value="50" class="slider">
+                </div>
+                <div class="control-group">
+                    <button class="btn btn--primary" id="add-stream">Add Stream</button>
+                    <button class="btn btn--secondary" id="send-burst">Send Burst</button>
+                </div>
+            </div>
+
+            <div class="comparison-layout">
+                <!-- TCP Streaming -->
+                <div class="protocol-section">
+                    <h3>TCP (Single Stream)</h3>
+                    <div class="stream-visualizer">
+                        <div class="stream-lane tcp-stream" id="tcp-stream">
+                            <div class="stream-header">
+                                <span>Stream 1 (All Data)</span>
+                                <span class="stream-status" id="tcp-stream-status">Active</span>
+                            </div>
+                            <div class="packet-queue" id="tcp-packet-queue">
+                                <!-- Packets will be added dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="throughput-meter">
+                        <label>Throughput: <span id="tcp-throughput">0 Mbps</span></label>
+                        <div class="meter">
+                            <div class="meter-fill" id="tcp-throughput-bar"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUIC Streaming -->
+                <div class="protocol-section">
+                    <h3>QUIC (Multiple Streams)</h3>
+                    <div class="stream-visualizer">
+                        <div class="streams-container" id="quic-streams-container">
+                            <!-- Multiple streams will be added here -->
+                        </div>
+                    </div>
+                    <div class="throughput-meter">
+                        <label>Throughput: <span id="quic-throughput">0 Mbps</span></label>
+                        <div class="meter">
+                            <div class="meter-fill" id="quic-throughput-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Migration Demo -->
+        <div class="demo-container hidden" id="migration-demo">
+            <div class="demo-header">
+                <h2>Connection Migration Playground</h2>
+                <p>Drag the device between networks to see how each protocol handles network changes</p>
+            </div>
+
+            <div class="network-environment">
+                <div class="network-zones">
+                    <div class="network-zone wifi-zone" id="wifi-zone">
+                        <div class="zone-header">WiFi Network</div>
+                        <div class="zone-stats">
+                            <div>Latency: 20ms</div>
+                            <div>Bandwidth: 100 Mbps</div>
+                            <div>Signal: Strong</div>
+                        </div>
+                    </div>
+                    
+                    <div class="network-zone cellular-zone" id="cellular-zone">
+                        <div class="zone-header">Cellular Network</div>
+                        <div class="zone-stats">
+                            <div>Latency: 80ms</div>
+                            <div>Bandwidth: 25 Mbps</div>
+                            <div>Signal: Good</div>
+                        </div>
+                    </div>
+                    
+                    <div class="network-zone ethernet-zone" id="ethernet-zone">
+                        <div class="zone-header">Ethernet</div>
+                        <div class="zone-stats">
+                            <div>Latency: 5ms</div>
+                            <div>Bandwidth: 1000 Mbps</div>
+                            <div>Signal: Stable</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="device-container">
+                    <div class="draggable-device" id="mobile-device">
+                        📱 Mobile Device
+                    </div>
+                </div>
+
+                <div class="server-endpoint">
+                    🖥️ Server
+                </div>
+            </div>
+
+            <div class="migration-status">
+                <div class="protocol-status">
+                    <h3>TCP Connection</h3>
+                    <div class="status-indicator" id="tcp-connection-status">Connected</div>
+                    <div class="connection-info">
+                        <div>Connection ID: N/A</div>
+                        <div>Network: <span id="tcp-current-network">WiFi</span></div>
+                        <div>Status: <span id="tcp-migration-status">Normal</span></div>
+                    </div>
+                </div>
+
+                <div class="protocol-status">
+                    <h3>QUIC Connection</h3>
+                    <div class="status-indicator connected" id="quic-connection-status">Connected</div>
+                    <div class="connection-info">
+                        <div>Connection ID: <span id="quic-connection-id">ABC123XYZ</span></div>
+                        <div>Network: <span id="quic-current-network">WiFi</span></div>
+                        <div>Status: <span id="quic-migration-status">Normal</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Dashboard -->
+        <div class="demo-container hidden" id="performance-demo">
+            <div class="demo-header">
+                <h2>Real-time Performance Dashboard</h2>
+                <p>Adjust network parameters and see real-time performance comparisons</p>
+            </div>
+
+            <div class="performance-controls">
+                <div class="control-group">
+                    <label class="form-label">Test Duration: <span id="test-duration-value">10s</span></label>
+                    <input type="range" id="test-duration" min="5" max="60" value="10" class="slider">
+                </div>
+                <div class="control-group">
+                    <label class="form-label">Concurrent Connections: <span id="connections-value">5</span></label>
+                    <input type="range" id="connections-slider" min="1" max="20" value="5" class="slider">
+                </div>
+                <div class="control-group">
+                    <button class="btn btn--primary" id="start-benchmark">Start Benchmark</button>
+                    <button class="btn btn--secondary" id="stop-benchmark">Stop Test</button>
+                </div>
+            </div>
+
+            <div class="performance-metrics">
+                <div class="metric-card">
+                    <h3>Connection Establishment</h3>
+                    <div class="metric-comparison">
+                        <div class="metric-item tcp">
+                            <label>TCP + TLS</label>
+                            <div class="metric-value" id="tcp-connection-time">0ms</div>
+                        </div>
+                        <div class="metric-item quic">
+                            <label>QUIC</label>
+                            <div class="metric-value" id="quic-connection-time">0ms</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Throughput</h3>
+                    <div class="metric-comparison">
+                        <div class="metric-item tcp">
+                            <label>TCP</label>
+                            <div class="metric-value" id="tcp-throughput-metric">0 Mbps</div>
+                        </div>
+                        <div class="metric-item quic">
+                            <label>QUIC</label>
+                            <div class="metric-value" id="quic-throughput-metric">0 Mbps</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <h3>Packet Loss Recovery</h3>
+                    <div class="metric-comparison">
+                        <div class="metric-item tcp">
+                            <label>TCP</label>
+                            <div class="metric-value" id="tcp-recovery-time">0ms</div>
+                        </div>
+                        <div class="metric-item quic">
+                            <label>QUIC</label>
+                            <div class="metric-value" id="quic-recovery-time">0ms</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="performance-chart">
+                <canvas id="performance-chart" width="800" height="400"></canvas>
+            </div>
+        </div>
+
+        <!-- Interactive Tooltip -->
+        <div class="tooltip" id="interactive-tooltip">
+            <div class="tooltip-content"></div>
+        </div>
+
+        <!-- Modal for detailed explanations -->
+        <div class="modal-overlay" id="modal-overlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 id="modal-title">Details</h3>
+                    <button class="btn btn--sm modal-close" id="modal-close">×</button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- Content will be dynamically added -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
